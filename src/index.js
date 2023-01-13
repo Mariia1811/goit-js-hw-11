@@ -14,13 +14,13 @@ refs.formEl.addEventListener('submit', onFormSubmit);
 
 let page = 1;
 let searchQuery = '';
+refs.btnEl.style.visibility = 'hidden';
 
 async function onFormSubmit(e) {
   e.preventDefault();
 
   searchQuery = e.currentTarget.elements.searchQuery.value.trim();
   page = 1;
-  refs.btnEl.disabled = false;
 
   try {
     const response = await getImg(searchQuery, page);
@@ -38,22 +38,23 @@ async function onFormSubmit(e) {
       'Sorry, there are no images matching your search query. Please try again.'
     );
   }
+  refs.btnEl.style.visibility = 'visible';
 }
 
 refs.btnEl.addEventListener('click', async () => {
   page += 1;
-  refs.btnEl.disabled = true;
+  refs.btnEl.style.visibility = 'visible';
 
   try {
     const response = await getImg(searchQuery, page);
     let allPage = response.data.totalHits / 40;
-    refs.btnEl.disabled = false;
+    refs.btnEl.style.visibility = 'visible';
     createListMarkup(response.data.hits);
     if (page >= allPage) {
       Notify.success(
         "We're sorry, but you've reached the end of search results."
       );
-      refs.btnEl.disabled = true;
+      refs.btnEl.style.visibility = 'hidden';
     }
   } catch {
     Notify.failure(
@@ -94,5 +95,17 @@ function createListMarkup(img) {
 
   refs.divEl.innerHTML = markupEl;
   lightbox.refresh();
+  scroll();
 }
 let lightbox = new SimpleLightbox('.gallery a');
+
+function scroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
