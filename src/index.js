@@ -1,39 +1,65 @@
 import './css/styles.css';
 import { getImg } from './fetchImages';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-// import SimpleLightbox from 'simplelightbox';
-// import 'simplelightbox/dist/simple-lightbox.min.css';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const refs = {
   formEl: document.querySelector('.search-form'),
   divEl: document.querySelector('.gallery'),
+  btnEl: document.querySelector('.load-more'),
 };
 
 refs.formEl.addEventListener('submit', onFormSubmit);
-let page = 1;
-function onFormSubmit(e) {
-  e.preventDefault();
-  page = 1;
-  const searchQuery = e.currentTarget.elements.searchQuery.value.trim();
 
-  getImg(searchQuery, page)
-    .then(response => {
-      if (response.data.total === 0) {
-        Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-      }
-      console.log(response);
-      refs.divEl.innerHTML = '';
-      createListMarkup(response.data.hits);
-      //       }
-    })
-    .catch(error => {
+let page = 1;
+let searchQuery = '';
+
+async function onFormSubmit(e) {
+  e.preventDefault();
+
+  searchQuery = e.currentTarget.elements.searchQuery.value.trim();
+  page = 1;
+  refs.btnEl.disabled = false;
+
+  try {
+    const response = await getImg(searchQuery, page);
+    if (response.data.total === 0) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
-    });
+    }
+
+    refs.divEl.innerHTML = '';
+    createListMarkup(response.data.hits);
+ 
+  } catch (error) {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  }
 }
+
+refs.btnEl.addEventListener('click', async () => {
+  page += 1;
+  refs.btnEl.disabled = true;
+  try {
+    const response = await getImg(searchQuery, page);
+    let allPage = response.data.totalHits / 40;
+    refs.btnEl.disabled = false;
+    createListMarkup(response.data.hits);
+    if (page >= allPage) {
+      Notify.success(
+        "We're sorry, but you've reached the end of search results."
+      );
+      refs.btnEl.disabled = true;
+    }
+  } catch {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  }
+});
 
 function createListMarkup(img) {
   const markupEl = img
@@ -66,14 +92,8 @@ function createListMarkup(img) {
     .join('');
 
   refs.divEl.innerHTML = markupEl;
+  lightbox.refresh();
 }
+let lightbox = new SimpleLightbox('.gallery a');
 
-// Використовується синтаксис async/await.
 
-// нескінченний скрол
-// У відповіді бекенд повертає властивість totalHits - загальна кількість зображень, які відповідають критерію пошуку(для безкоштовного акаунту).Якщо користувач дійшов до кінця колекції,
-//     ховай кнопку і виводь повідомлення з текстом "We're sorry, but you've reached the end of search results.".
-
-// let lightbox = new SimpleLightbox('.photo-card a', {
-//   refresh,
-// });
