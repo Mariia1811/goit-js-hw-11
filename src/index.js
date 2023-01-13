@@ -24,6 +24,7 @@ async function onFormSubmit(e) {
 
   try {
     const response = await getImg(searchQuery, page);
+    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
     if (response.data.total === 0) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -32,7 +33,6 @@ async function onFormSubmit(e) {
 
     refs.divEl.innerHTML = '';
     createListMarkup(response.data.hits);
- 
   } catch (error) {
     Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
@@ -43,6 +43,7 @@ async function onFormSubmit(e) {
 refs.btnEl.addEventListener('click', async () => {
   page += 1;
   refs.btnEl.disabled = true;
+
   try {
     const response = await getImg(searchQuery, page);
     let allPage = response.data.totalHits / 40;
@@ -95,5 +96,3 @@ function createListMarkup(img) {
   lightbox.refresh();
 }
 let lightbox = new SimpleLightbox('.gallery a');
-
-
