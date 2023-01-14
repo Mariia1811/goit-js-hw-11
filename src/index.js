@@ -12,6 +12,7 @@ const refs = {
 
 refs.formEl.addEventListener('submit', onFormSubmit);
 
+let allPage = 0;
 let page = 1;
 let searchQuery = '';
 refs.btnEl.style.visibility = 'hidden';
@@ -21,35 +22,35 @@ async function onFormSubmit(e) {
 
   searchQuery = e.currentTarget.elements.searchQuery.value.trim();
   page = 1;
-
+  refs.divEl.innerHTML = '';
   try {
     const response = await getImg(searchQuery, page);
-    Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
-    if (response.data.total === 0) {
-      Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    }
+    allPage = response.data.totalHits / 40;
 
-    refs.divEl.innerHTML = '';
-    createListMarkup(response.data.hits);
+    if (response.data.total !== 0) {
+      Notify.info(`Hooray! We found ${response.data.totalHits} images.`);
+      createListMarkup(response.data.hits);
+    } else {
+      throw new Error();
+    }
   } catch (error) {
     Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
     );
   }
-  refs.btnEl.style.visibility = 'visible';
+  if (page <= allPage) {
+    refs.btnEl.style.visibility = 'visible';
+  }
 }
 
 refs.btnEl.addEventListener('click', async () => {
   page += 1;
-  refs.btnEl.style.visibility = 'visible';
 
   try {
     const response = await getImg(searchQuery, page);
-    let allPage = response.data.totalHits / 40;
-    refs.btnEl.style.visibility = 'visible';
+
     createListMarkup(response.data.hits);
+
     if (page >= allPage) {
       Notify.success(
         "We're sorry, but you've reached the end of search results."
@@ -93,7 +94,8 @@ function createListMarkup(img) {
     })
     .join('');
 
-  refs.divEl.innerHTML = markupEl;
+  refs.divEl.insertAdjacentHTML('beforeend', markupEl);
+
   lightbox.refresh();
   scroll();
 }
