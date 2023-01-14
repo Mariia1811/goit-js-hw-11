@@ -23,6 +23,10 @@ async function onFormSubmit(e) {
   searchQuery = e.currentTarget.elements.searchQuery.value.trim();
   page = 1;
   refs.divEl.innerHTML = '';
+  if (!searchQuery) {
+    refs.btnEl.style.visibility = 'hidden';
+    return;
+  }
   try {
     const response = await getImg(searchQuery, page);
     allPage = response.data.totalHits / 40;
@@ -48,19 +52,18 @@ refs.btnEl.addEventListener('click', async () => {
 
   try {
     const response = await getImg(searchQuery, page);
-
     createListMarkup(response.data.hits);
-
-    if (page >= allPage) {
-      Notify.success(
-        "We're sorry, but you've reached the end of search results."
-      );
-      refs.btnEl.style.visibility = 'hidden';
-    }
   } catch {
     Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
     );
+  }
+
+  if (page >= allPage) {
+    Notify.success(
+      "We're sorry, but you've reached the end of search results."
+    );
+    refs.btnEl.style.visibility = 'hidden';
   }
 });
 
