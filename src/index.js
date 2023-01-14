@@ -11,6 +11,7 @@ const refs = {
 };
 
 refs.formEl.addEventListener('submit', onFormSubmit);
+refs.btnEl.addEventListener('click', onBtnClick);
 
 let allPage = 0;
 let page = 1;
@@ -38,11 +39,8 @@ async function onFormSubmit(e) {
 
   try {
     const gallery = await creatrGallery();
-    if (gallery.data.total !== 0) {
-      Notify.info(`Hooray! We found ${gallery.data.totalHits} images.`);
-    } else {
-      throw new Error();
-    }
+    Notify.info(`Hooray! We found ${gallery.data.totalHits} images.`);
+    if (gallery.data.total === 0) throw new Error();
   } catch {
     Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
@@ -52,9 +50,11 @@ async function onFormSubmit(e) {
   if (page <= allPage) {
     refs.btnEl.style.visibility = 'visible';
   }
+  
+  e.target.reset();
 }
 
-refs.btnEl.addEventListener('click', () => {
+function onBtnClick() {
   page += 1;
   creatrGallery();
 
@@ -64,7 +64,7 @@ refs.btnEl.addEventListener('click', () => {
     );
     refs.btnEl.style.visibility = 'hidden';
   }
-});
+}
 
 function createListMarkup(img) {
   const markupEl = img
